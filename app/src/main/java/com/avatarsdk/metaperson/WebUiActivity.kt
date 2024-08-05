@@ -13,7 +13,9 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
-
+import java.io.File
+import androidx.core.content.FileProvider
+import androidx.core.content.ContextCompat
 
 class WebUiActivity : AppCompatActivity() {
 
@@ -139,19 +141,28 @@ class WebUiActivity : AppCompatActivity() {
         }
     }
 
-    private val openCameraResultContract  = registerForActivityResult(ActivityResultContracts.TakePicturePreview()){
+    private lateinit var imageUri: Uri
 
-        if(it == null){
+    private val openCameraResultContract = registerForActivityResult(ActivityResultContracts.TakePicture()) { success ->
+        if (!success) {
             Toast.makeText(this, "No Image captured !!", Toast.LENGTH_SHORT).show()
             filePathCallback?.onReceiveValue(null)
         } else {
-            it?.let {
-                Log.d("ON RESULT", "no data bitmap: ${it}")
-                val path = MediaStore.Images.Media.insertImage(contentResolver, it, "fromCamera.jpeg", "")
-                filePathCallback?.onReceiveValue(arrayOf(Uri.parse(path)))
-            }
+            Log.d("ON RESULT", "Image saved to: $imageUri")
+            filePathCallback?.onReceiveValue(arrayOf(imageUri))
         }
     }
+
+    // Function to start the camera intent
+    private fun openCamera() {
+        val imageFile = File.createTempFile("fromCamera", ".jpeg", cacheDir).apply {
+            createNewFile()
+            deleteOnExit()
+        }
+        imageUri = FileProvider.getUriForFile(this, "${BuildConfig.APPLICATION_ID}.provider", imageFile)
+        openCameraResultContract.launch(imageUri)
+    }
+
 
     private val requestPermission = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -160,7 +171,8 @@ class WebUiActivity : AppCompatActivity() {
             Toast.makeText(this, "Camera permission not granted.", Toast.LENGTH_SHORT).show()
             filePathCallback?.onReceiveValue(null)
         } else {
-            openCameraResultContract.launch(null)
+            //openCameraResultContract.launch(null)
+            openCamera()
         }
 
     }
