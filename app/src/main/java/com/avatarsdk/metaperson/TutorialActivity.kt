@@ -15,7 +15,7 @@ class TutorialActivity : AppCompatActivity() {
     private lateinit var binding: ActivityTutorialBinding
     var webView: WebView? = null
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        onBackPressed()
+        onBackPressedDispatcher.onBackPressed()
         return true
     }
     override fun onCreate(savedInstanceState: Bundle?) {
